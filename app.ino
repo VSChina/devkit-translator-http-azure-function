@@ -30,7 +30,7 @@ enum STATUS
 
 static STATUS status;
 
-static void log_time(const char *event)
+static void logTime(const char *event)
 {
     time_t t = time(NULL);
     Serial.printf("%s: %s", event, ctime(&t));
@@ -43,10 +43,10 @@ static int httpTriggerTranslator(const char *content, int length)
         Serial.println("Content not valid");
         return -1;
     }
-    log_time("begin httppost");
+    logTime("begin httppost");
     HTTPClient client = HTTPClient(HTTP_POST, azureFunctionUri);
     const Http_Response *response = client.send(content, length);
-    log_time("response back");
+    logTime("response back");
     if (response != NULL && response->status_code == 200)
     {
         return 0;
@@ -65,8 +65,7 @@ void setup()
 {
     Screen.clean();
     Screen.print(0, "DevKitTranslator");
-    Screen.print(2, "Initializing...");
-    Screen.print(3, " > WiFi");
+    Screen.print(2, "Init WiFi...");
 
     hasWifi = (WiFi.begin() == WL_CONNECTED);
     if (!hasWifi)
@@ -156,6 +155,7 @@ void loop()
             if (0 == httpTriggerTranslator(waveFile, wavFileSize))
             {
                 status = Uploaded;
+                Screen.print(1, "Receiving...");
             }
             else
             {
@@ -173,7 +173,6 @@ void loop()
         }
         break;
     case Uploaded:
-        Screen.print(1, "Receiving...");
         char *etag = (char *)malloc(40);
         while (!translated)
         {
@@ -188,7 +187,7 @@ void loop()
                 Screen.clean();
                 Screen.print(1, "Translation: ");
                 Screen.print(2, p, true);
-                log_time("Translated");
+                logTime("Translated");
                 completeC2DMessage((char *)etag);
                 translated = true;
                 free((void *)p);
